@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verdant Poly 3D - Low Poly Garden Virtual Office for AI Agents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Three.js & OrbitControls via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <div id="app-container">
+    <!-- Top Bar / Header -->
+    <!-- Top Bar / Modern Architectural Navigation Bar -->
+    <!-- Top Bar / Modern Architectural Navigation Bar -->
+    <header id="top-navbar">
+      <div class="nav-left">
+        <div class="logo-area">
+          <div class="garden-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+            </svg>
+          </div>
+          <div class="logo-text">
+            <div class="logo-title-row">
+              <h1>Verdant Poly 3D</h1>
+              <span class="version-badge">v2.6 Pro</span>
+            </div>
+            <span class="sub">Kantor Virtual Botani Cerdas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <div class="controls-toolbar">
+          <!-- Pengaturan Grafis (Low / Medium / High) -->
+          <div class="graphics-selector-wrap" title="Pengaturan Kualitas Grafis & Bayangan">
+            <span class="ctrl-icon">⚙️</span>
+            <select id="select-graphics" class="nav-select-graphics">
+              <option value="high" selected>Grafis: Tinggi (Bayangan Halus)</option>
+              <option value="medium">Grafis: Sedang (Bayangan Biasa)</option>
+              <option value="low">Grafis: Ringan (Perangkat Hemat)</option>
+            </select>
+          </div>
+
+          <button id="btn-weather" class="nav-btn-icon" title="Ubah Waktu & Pencahayaan 3D (Siang/Senja/Malam)">
+            <span class="nav-btn-symbol">☀️</span>
+            <span class="nav-btn-label">Pencahayaan</span>
+          </button>
+          
+          <!-- Suara Alam & Slider Volume -->
+          <div class="audio-control-cluster">
+            <button id="btn-sound" class="nav-btn-icon" title="Nyalakan / Matikan Suara Alam">
+              <span class="nav-btn-symbol">🍃</span>
+              <span class="nav-btn-label">Suara Alam</span>
+            </button>
+            <div id="volume-slider-box" class="volume-slider-wrap hidden">
+              <input type="range" id="volume-slider" min="0" max="100" value="40" title="Volume Suara Alam (0 - 100%)">
+            </div>
+          </div>
+
+          <div class="nav-separator"></div>
+          <button id="btn-broadcast" class="nav-btn-secondary" title="Panggil seluruh agen untuk berkumpul di Gazebo Rapat">
+            <span class="nav-btn-symbol">📢</span>
+            <span>Rapat Tim</span>
+          </button>
+          <button id="btn-add-agent" class="nav-btn-primary" title="Tambah Agen Baru ke Dunia 3D">
+            <span class="nav-btn-plus">+</span>
+            <span>Rekrut Agen</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Area -->
+    <main id="main-view">
+      <!-- 3D WebGL Canvas Viewport -->
+      <section id="canvas-wrapper">
+        <!-- Area Camera Navigator Bar (Atas Kiri Kanvas - Minimizable Glass Dock) -->
+        <div id="map-controls" class="map-controls">
+          <div class="map-controls-header">
+            <span class="map-controls-icon">🎥</span>
+            <span class="map-controls-label">Kamera</span>
+            <button id="btn-toggle-map-controls" class="map-controls-toggle-btn" title="Minimize / Perluas Navigasi Kamera">
+              <span class="toggle-icon">−</span>
+            </button>
+          </div>
+          <div id="map-controls-items" class="map-controls-items">
+            <button id="btn-cam-greenhouse" class="cam-preset-btn" title="Kamera Rumah Kaca Riset">💎 Rumah Kaca</button>
+            <button id="btn-cam-orchard" class="cam-preset-btn" title="Kamera Kebun Coding">🍎 Kebun Coding</button>
+            <button id="btn-cam-pond" class="cam-preset-btn" title="Kamera Kolam Teratai">🪷 Kolam Teratai</button>
+            <button id="btn-cam-gazebo" class="cam-preset-btn" title="Kamera Gazebo Rapat">🛖 Gazebo Rapat</button>
+            <button id="btn-cam-flowers" class="cam-preset-btn" title="Kamera Taman Bunga">🌷 Taman Bunga</button>
+            <button id="btn-reset-view" title="Reset Sudut Pandang Utama">🎯 Ikhtisar Penuh</button>
+          </div>
+        </div>
+
+        <!-- HUD Lingkungan & Jam Virtual (Overlay Melayang di Atas Kanan Kanvas) -->
+        <div class="environment-hud">
+          <div class="hud-item" title="Jumlah agen aktif bekerja">
+            <span class="pulse-dot"></span>
+            <span class="hud-label">Online</span>
+            <strong id="active-agents-count" class="hud-value">5</strong>
+          </div>
+          <div class="hud-divider"></div>
+          <div class="hud-item" title="Kondisi cuaca dan waktu pulau">
+            <span id="weather-icon" class="hud-icon">☀️</span>
+            <span id="weather-text" class="hud-value">Siang Cerah</span>
+          </div>
+          <div class="hud-divider"></div>
+          <div class="hud-item" title="Tingkat vitalitas & oksigen botani">
+            <span class="hud-icon">🌱</span>
+            <span class="hud-label">Oksigen</span>
+            <strong id="garden-vitality" class="hud-value">99.4%</strong>
+          </div>
+          <div class="hud-divider"></div>
+          <div class="hud-item hud-time" title="Jam virtual pulau">
+            <span class="hud-icon">🕒</span>
+            <span id="garden-clock" class="hud-mono">09:51</span>
+          </div>
+        </div>
+
+        <!-- Interactive 2D Minimap Overview (Kiri Bawah Kanvas) -->
+        <div id="interactive-minimap" class="minimap-container" title="Klik area pada minimap untuk mengarahkan kamera">
+          <div class="minimap-header">
+            <span>🗺️ Radar Pulau</span>
+            <span class="minimap-hint-badge">Klik Zona</span>
+          </div>
+          <div class="minimap-radar-svg-wrap">
+            <svg id="minimap-svg" viewBox="0 0 140 140">
+              <!-- Pulau Base & Air -->
+              <circle cx="70" cy="70" r="62" class="minimap-water"></circle>
+              <circle cx="70" cy="70" r="50" class="minimap-island"></circle>
+              <circle cx="70" cy="70" r="32" class="minimap-ring-path"></circle>
+              <!-- Zona Interaktif Minimap -->
+              <circle cx="70" cy="70" r="5" class="minimap-zone-dot" data-zone="center" title="Air Mancur Pusat"></circle>
+              <circle cx="42" cy="42" r="9" class="minimap-zone-dot zone-greenhouse" data-zone="greenhouse" title="💎 Rumah Kaca"></circle>
+              <circle cx="98" cy="42" r="9" class="minimap-zone-dot zone-orchard" data-zone="orchard" title="🍎 Kebun Coding"></circle>
+              <circle cx="42" cy="98" r="9" class="minimap-zone-dot zone-pond" data-zone="pond" title="🪷 Kolam Teratai"></circle>
+              <circle cx="98" cy="98" r="9" class="minimap-zone-dot zone-gazebo" data-zone="gazebo" title="🛖 Gazebo Rapat"></circle>
+              <circle cx="70" cy="30" r="9" class="minimap-zone-dot zone-flowers" data-zone="flowers" title="🌷 Taman Bunga"></circle>
+              <!-- Dinamis Titik Posisi Agen -->
+              <g id="minimap-agent-blips"></g>
+            </svg>
+          </div>
+        </div>
+
+        <div id="three-container"></div>
+
+        <!-- Floating Toast Hint di Bawah Kanvas (Tidak Menghalangi Tombol) -->
+        <div id="floating-interaction-toast" class="floating-toast">
+          <span class="toast-icon">💡</span>
+          <span>Klik karakter untuk membuka profil & tugas. Klik tanah untuk berjalan.</span>
+        </div>
+
+        <!-- Floating Quick Tooltip for hovered elements -->
+        <div id="quick-tooltip" class="quick-tooltip hidden"></div>
+        <!-- Floating reopen button when sidebar is minimized -->
+        <button id="btn-expand-sidebar" class="sidebar-expand-btn hidden" title="Buka Sidebar (Panel Kontrol)">
+          <span class="toggle-icon">❮</span>
+          <span class="expand-text">Panel Kontrol</span>
+        </button>
+      </section>
+
+      <!-- Right Sidebar: Agent Dashboard & Control Deck -->
+      <aside id="sidebar-panel">
+        <!-- Sidebar Collapse / Minimize Header Bar -->
+        <div class="sidebar-header-bar">
+          <div class="sidebar-header-title">
+            <span class="sidebar-header-icon">⚙️</span>
+            <span class="sidebar-header-text">Panel Kontrol</span>
+          </div>
+          <button id="btn-toggle-sidebar" class="sidebar-toggle-btn" title="Kecilkan Sidebar">
+            <span class="toggle-icon">❯</span>
+          </button>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="agents">🤖 Direktori Agen</button>
+          <button class="tab-btn" data-tab="zones">🏡 Zona Pulau</button>
+          <button class="tab-btn" data-tab="tasks">📋 Papan Tugas</button>
+        </div>
+
+        <!-- Tab 1: AI Agents Roster -->
+        <div class="tab-content active" id="tab-agents">
+          <div class="panel-section-header">
+            <h3>Karakter AI Siaga</h3>
+            <span class="badge" id="squad-badge">5 Siaga</span>
+          </div>
+          <div id="agents-list" class="agent-card-list">
+            <!-- Dynamically populated agents -->
+          </div>
+        </div>
+
+        <!-- Tab 2: Garden Zones & Productivity Areas -->
+        <div class="tab-content" id="tab-zones">
+          <div class="panel-section-header">
+            <h3>Arsitektur Zona Pulau</h3>
+            <span class="badge">5 Zona</span>
+          </div>
+          <div class="zones-grid" id="zones-list">
+            <!-- Zone Cards -->
+          </div>
+        </div>
+
+        <!-- Tab 3: AI Tasks & Garden Logs -->
+        <div class="tab-content" id="tab-tasks">
+          <div class="panel-section-header">
+            <h3>Aktivitas & Task AI</h3>
+            <button id="btn-add-task" class="btn-micro">+ Tugas Baru</button>
+          </div>
+          <div id="tasks-feed" class="task-feed-list">
+            <!-- Dynamically populated tasks -->
+          </div>
+        </div>
+
+        <!-- Agent Live Terminal / Chat Dialog Area -->
+        <div id="agent-chat-tray" class="chat-tray">
+          <div class="tray-header">
+            <div class="tray-title">
+              <span id="chat-agent-avatar" class="tray-avatar">🤖</span>
+              <div>
+                <strong id="chat-agent-name">Pilih Karakter Poly</strong>
+                <span id="chat-agent-role" class="sub-small">Klik karakter geometris di 3D</span>
+              </div>
+            </div>
+            <button id="btn-close-chat" class="icon-btn-close">&times;</button>
+          </div>
+          <div id="chat-messages" class="chat-messages">
+            <div class="chat-placeholder">
+              <p>🔷 <strong>Verdant Poly 3D Botanical Office</strong></p>
+              <p>Setiap agen dibentuk dengan seni <em>Low-Poly Flat-Shading</em> yang estetik. Klik karakter di viewport 3D untuk berdialog dan memberi prompt instruksi!</p>
+            </div>
+          </div>
+          <form id="chat-form" class="chat-form">
+            <input type="text" id="chat-input" placeholder="Beri instruksi prompt ke agen poly..." autocomplete="off">
+            <button type="submit" id="btn-send-prompt">Kirim</button>
+          </form>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Modal: Add New Agent -->
+    <div id="modal-agent" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>🌱 Rekrut Karakter AI Low-Poly Baru</h3>
+          <button id="btn-modal-close" class="close-x">&times;</button>
+        </div>
+        <form id="form-new-agent" class="modal-body">
+          <label>
+            Nama AI Agen:
+            <input type="text" id="new-agent-name" required placeholder="Contoh: Prisma, Rowan, Voxel" maxlength="15">
+          </label>
+          <label>
+            Gender Karakter:
+            <select id="new-agent-gender">
+              <option value="female">👩‍🌾 Karakter Wanita (Gaun Poligonal, Rambut Panjang & Flats)</option>
+              <option value="male">👨‍💻 Karakter Pria (Jaket/Kemeja Tegap, Celana & Boots Outdoor)</option>
+            </select>
+          </label>
+          <label>
+            Role / Spesialisasi:
+            <select id="new-agent-role">
+              <option value="Botani Researcher (Data & Riset)">🔍 Botani Researcher (Data & Riset)</option>
+              <option value="Forest Architect (Frontend / UI)">🎨 Forest Architect (Frontend / UI)</option>
+              <option value="Root Engineer (Backend & Logic)">⚙️ Root Engineer (Backend & Logic)</option>
+              <option value="Garden Warden (Security & QA)">🛡️ Garden Warden (Security & QA)</option>
+              <option value="Bloom Copywriter (Content & Docs)">📝 Bloom Copywriter (Content & Docs)</option>
+            </select>
+          </label>
+          <label>
+            Warna Karakter:
+            <div class="palette-picker" id="color-picker-options">
+              <span class="color-dot active" data-color="#5a755e" style="background:#5a755e;" title="Muted Olive"></span>
+              <span class="color-dot" data-color="#485868" style="background:#485868;" title="Slate Denim"></span>
+              <span class="color-dot" data-color="#b58369" style="background:#b58369;" title="Terracotta Clay"></span>
+              <span class="color-dot" data-color="#6e6378" style="background:#6e6378;" title="Heather Plum"></span>
+              <span class="color-dot" data-color="#a88d67" style="background:#a88d67;" title="Raw Ochre"></span>
+              <span class="color-dot" data-color="#8fa892" style="background:#8fa892;" title="Nordic Sage"></span>
+            </div>
+          </label>
+          <label>
+            Penempatan Zona Awal:
+            <select id="new-agent-zone">
+              <option value="flower_garden">🌷 Meadow Flower Garden (Kreativitas & Relaksasi)</option>
+              <option value="greenhouse">💎 Poly Glasshouse (Riset & Deep Work)</option>
+              <option value="pond">🪷 Poly Lotus Pond (Brainstorming & Santai)</option>
+              <option value="gazebo">🛖 Poly Gazebo (Ruang Rapat Utama)</option>
+              <option value="orchard">🍎 Poly Orchard (Coding & Produksi)</option>
+            </select>
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-agent" class="btn secondary">Batal</button>
+            <button type="submit" class="btn primary">Deploy Karakter Poly 3D</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Detail Profil Karakter AI (Pro Inspector Panel) -->
+    <div id="modal-agent-detail" class="modal-backdrop hidden">
+      <div class="modal-card modal-profile-card">
+        <div class="modal-header">
+          <div class="profile-header-title">
+            <span id="detail-agent-avatar" class="detail-avatar">🤖</span>
+            <div>
+              <h3 id="detail-agent-name">Nama Agen</h3>
+              <span id="detail-agent-gender-role" class="sub-small">Wanita • Spesialis Riset</span>
+            </div>
+          </div>
+          <button id="btn-close-detail" class="close-x">&times;</button>
+        </div>
+        <div class="modal-body profile-body">
+          <div class="profile-stats-grid">
+            <div class="profile-stat-box">
+              <span class="p-label">Lokasi Zona Saat Ini</span>
+              <strong id="detail-agent-zone">💎 Rumah Kaca Riset</strong>
+            </div>
+            <div class="profile-stat-box">
+              <span class="p-label">Status Aktivitas</span>
+              <strong id="detail-agent-status" class="status-badge-active">Bekerja</strong>
+            </div>
+            <div class="profile-stat-box">
+              <span class="p-label">Energi Komputasi</span>
+              <strong>98.5%</strong>
+            </div>
+            <div class="profile-stat-box">
+              <span class="p-label">Kecepatan Stride</span>
+              <strong id="detail-agent-speed">0.12 m/s</strong>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <h4>📋 Tugas & Riset Terkini</h4>
+            <div id="detail-agent-task-list" class="profile-task-list">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <button type="button" id="btn-focus-camera-agent" class="btn primary">🎯 Fokus Kamera ke Karakter</button>
+            <button type="button" id="btn-open-agent-chat" class="btn secondary">💬 Buka Terminal Chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intuitive 3D World Loading Screen -->
+    <div id="loading-screen" class="loading-overlay">
+      <div class="loading-card">
+        <div class="loading-spinner-poly">🔷</div>
+        <h2>Memuat Verdant Poly 3D...</h2>
+        <p class="loading-sub">Menginisialisasi geometri, tekstur alam, dan kecerdasan agen botani</p>
+        <div class="loading-bar-wrap">
+          <div id="loading-bar-fill" class="loading-bar-fill" style="width: 15%;"></div>
+        </div>
+        <span id="loading-status-text" class="loading-status">Menyusun pulau faceted...</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
